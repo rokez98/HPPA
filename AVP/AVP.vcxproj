@@ -121,6 +121,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Matrix.h" />
+    <ClInclude Include="MatrixUtils.h" />
     <ClInclude Include="MatrixMultiplier.h" />
     <ClInclude Include="NonVectorizedMatrixMultiplier.h" />
     <ClInclude Include="SseMatrixMultiplier.h" />

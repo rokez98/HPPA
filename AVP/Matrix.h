@@ -4,13 +4,10 @@ template <typename T> class Matrix {
 public:
 	T**** matrix; 
 
-	int majorSize;
-	int minorSize;
+	const int majorSize;
+	const int minorSize;
 	
-	Matrix(int majorSize, int minorSize) {
-		this->majorSize = majorSize;
-		this->minorSize = minorSize;
-
+	Matrix(int majorSize, int minorSize) : majorSize(majorSize), minorSize(minorSize) {
 		this->matrix = new T***[majorSize];
 		for (int i = 0; i < majorSize; i++) {
 			this->matrix[i] = new T**[majorSize];
@@ -18,6 +15,9 @@ public:
 				this->matrix[i][j] = new T*[minorSize];
 				for (int k = 0; k < minorSize; k++) {
 					this->matrix[i][j][k] = new T[minorSize];
+					for (int m = 0; m < minorSize; m++) {
+						matrix[i][j][k][m] = 0;
+					}
 				}
 			}
 		}

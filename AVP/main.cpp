@@ -7,27 +7,39 @@
 #include "SseMatrixMultiplier.h"
 #include "VectorizedMatrixMultiplier.h"
 #include "NonVectorizedMatrixMultiplier.h"
+#include "MatrixUtils.h"
 
 #define MAJOR_SIZE 100
-#define MINOR_SIZE 80
+#define MINOR_SIZE 64
+
+typedef double MatrixType;
 
 int main() {
-	auto a = new Matrix<double>(MAJOR_SIZE, MINOR_SIZE);
-	auto b = new Matrix<double>(MAJOR_SIZE, MINOR_SIZE);
+	ULONGLONG start, end;
 
-	MatrixMultiplier<double>* multipliers[] = {
-		new NonVectorizedMatrixMultiplier<double>(),
-		new VectorizedMatrixMultiplier<double>(),
-		new SseMatrixMultiplier<double>(),
+	auto a = Matrix<MatrixType>(MAJOR_SIZE, MINOR_SIZE);
+	auto b = Matrix<MatrixType>(MAJOR_SIZE, MINOR_SIZE);
+
+	auto utils = new MatrixUtils<MatrixType>;
+
+	MatrixMultiplier<MatrixType>* multipliers[] = {
+		new NonVectorizedMatrixMultiplier<MatrixType>(),
+		new VectorizedMatrixMultiplier<MatrixType>(),
+		new SseMatrixMultiplier<MatrixType>()
 	};
 
 	for (int i = 0; i < 3; i++) {
-		int start = GetTickCount();
+		utils->RandomizeMatrix(a);
+		utils->RandomizeMatrix(b);
 
-		multipliers[i]->Multiply(*a, *b);
-		
-		int end = GetTickCount();
-		
+		start = GetTickCount64();
+
+		auto result = multipliers[i]->Multiply(a, b);
+
+		end = GetTickCount();
+
+		result->~Matrix();
+
 		printf("TIME: %d milliseconds.\n", end - start);
 	}
 
