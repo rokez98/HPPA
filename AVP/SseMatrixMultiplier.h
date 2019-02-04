@@ -9,26 +9,30 @@
 template <typename T> class SseMatrixMultiplier : public MatrixMultiplier<T> {
 public:
 	Matrix<T>* Multiply(Matrix<T>& firstMatrix, Matrix<T>& secondMatrix) override {
-		Matrix<T>* resultMatrix = new Matrix<T>(firstMatrix.majorSize, firstMatrix.minorSize);
+		Matrix<T>* resultMatrix = new Matrix<T>(firstMatrix.majorHeight, secondMatrix.majorWidth, firstMatrix.minorHeight, secondMatrix.minorWidth);
 
-		for (auto m = 0; m < firstMatrix.majorSize; m++) {
-			for (auto n = 0; n < secondMatrix.majorSize; n++) {
-				for (auto i = 0; i < firstMatrix.minorSize; i++) {
-					T *__restrict temp = resultMatrix->matrix[m][n][i];
+		for (auto m = 0; m < firstMatrix.majorHeight; m++) {
+			for (auto n = 0; n < secondMatrix.majorWidth; n++) {
+				for (auto l = 0; l < resultMatrix->majorWidth; l++) {
+					for (auto i = 0; i < resultMatrix->minorHeight; i++) {
+						T *__restrict temp = resultMatrix->matrix[m][n][i];
+						for (auto j = 0; j < secondMatrix.minorWidth; j++) {
+							T *__restrict temp2 = secondMatrix.matrix[l][n][j];
 
-					for (auto j = 0; j < secondMatrix.minorSize; j++) {
-						T *__restrict temp2 = secondMatrix.matrix[m][n][j];
+							const __m128 buff = {
+								firstMatrix.matrix[m][l][i][j],
+								firstMatrix.matrix[m][l][i][j],
+								firstMatrix.matrix[m][l][i][j],
+								firstMatrix.matrix[m][l][i][j]
+							};
 
-						const __m256d buff = {
-							firstMatrix.matrix[m][n][i][j],
-							firstMatrix.matrix[m][n][i][j],
-							firstMatrix.matrix[m][n][i][j],
-							firstMatrix.matrix[m][n][i][j]
-						};
+							for (auto k = 0; k < resultMatrix->minorWidth; k += 4) {
+								__m128 res = _mm_add_ps(_mm_mul_ps(buff, *reinterpret_cast<__m128*>(temp2 + k)), *reinterpret_cast<__m128*>(temp + k));
+								
+								// _mm_store_ps(temp + k, res);
 
-						for (auto k = 0; k < firstMatrix.minorSize; k += 4) {
-							__m256d res = _mm256_add_pd(_mm256_mul_pd(buff, *reinterpret_cast<__m256d*>(temp2 + k)), *reinterpret_cast<__m256d*>(temp + k));
-							memcpy(temp + k, &res, sizeof(res));
+								memcpy(temp + k, &res, sizeof(res));
+							}
 						}
 					}
 				}
